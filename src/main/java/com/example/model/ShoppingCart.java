@@ -1,8 +1,17 @@
 package com.example.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.util.List;
 
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
 public class ShoppingCart {
 
     private final List<ShoppingCartItem> shoppingCartItems;
@@ -13,10 +22,4 @@ public class ShoppingCart {
 
     private final BigDecimal totalPrice;
 
-    public ShoppingCart(final List<ShoppingCartItem> shoppingCartItems, final BigDecimal priceBeforeDiscount, final BigDecimal discount, final BigDecimal totalPrice) {
-        this.shoppingCartItems = shoppingCartItems;
-        this.priceBeforeDiscount = priceBeforeDiscount;
-        this.discount = discount;
-        this.totalPrice = totalPrice;
-    }
 }

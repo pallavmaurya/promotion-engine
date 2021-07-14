@@ -1,13 +1,18 @@
 package com.example.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
 public class StockKeepingUnit {
 
     private final Character skuId;
 
     private final int quantity;
 
-    public StockKeepingUnit(final Character skuId, final int quantity) {
-        this.skuId = skuId;
-        this.quantity = quantity;
-    }
 }
