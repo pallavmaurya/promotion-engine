@@ -33,3 +33,21 @@ Active Promotions
 3 of A's for 130
 
 2 of B's for 45 C & D for 30
+
+## How to Run
+
+* Clone this repository
+* Make sure you are using JDK 1.8 and Maven 3.x
+* You can build the project and run the tests by running ```mvn clean package```
+* Once successfully built, you can run the service by below command
+```
+        mvn spring-boot:run
+```
+* Check the stdout or boot_example.log file to make sure no exceptions are thrown
+
+Once the application runs you should see something like this
+
+```
+2021-07-14 16:00:27.596  INFO 15840 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2021-07-14 16:00:27.615  INFO 15840 --- [           main] c.e.p.PromotionEngineApplication         : Started PromotionEngineApplication in 7.938 seconds (JVM running for 8.826)
+```
