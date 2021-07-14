@@ -1,8 +1,10 @@
 package com.example.data;
 
 import com.example.model.DiscountEnum;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,6 +16,8 @@ import java.math.BigDecimal;
 @Entity
 @Builder
 @EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
 public class Promotion {
 
 
@@ -38,18 +42,4 @@ public class Promotion {
 
     @Column
     private boolean active;
-
-    public Promotion(final String skuTypes, final String name, final int priority, final int lotSize, final DiscountEnum discountType, final BigDecimal value, final boolean active) {
-        this.skuTypes = skuTypes;
-        this.name = name;
-        this.priority = priority;
-        this.lotSize = lotSize;
-        this.discountType = discountType;
-        this.value = value;
-        this.active = active;
-    }
-
-    public Promotion() {
-
-    }
 }

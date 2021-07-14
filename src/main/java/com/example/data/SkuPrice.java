@@ -1,8 +1,10 @@
 package com.example.data;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.Column;
@@ -16,6 +18,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
 public class SkuPrice {
 
     @Id
@@ -24,12 +28,4 @@ public class SkuPrice {
 
     @Column
     private BigDecimal unitPrice;
-
-    public SkuPrice(final Character skuId, final BigDecimal unitPrice) {
-        this.skuId = skuId;
-        this.unitPrice = unitPrice;
-    }
-
-    public SkuPrice() {
-    }
 }
