@@ -2,6 +2,7 @@ package com.example.data;
 
 import com.example.model.DiscountEnum;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Builder
+@EqualsAndHashCode
 public class Promotion {
 
 
