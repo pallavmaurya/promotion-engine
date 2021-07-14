@@ -45,7 +45,8 @@ public class CheckoutServiceImplTest {
                 .thenReturn(SkuPrice.builder().skuId('B').unitPrice(BigDecimal.valueOf(30)).build());
         when(priceService.getSkuPrice('C'))
                 .thenReturn(SkuPrice.builder().skuId('C').unitPrice(BigDecimal.valueOf(20)).build());
-
+        when(priceService.getSkuPrice('D'))
+                .thenReturn(SkuPrice.builder().skuId('D').unitPrice(BigDecimal.valueOf(15)).build());
         when(promotionService.getActivePromotions())
                 .thenReturn(TestDataSetup.getActivePromotions());
     }

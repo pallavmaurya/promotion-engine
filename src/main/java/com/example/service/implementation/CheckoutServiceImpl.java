@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -93,21 +94,137 @@ public class CheckoutServiceImpl implements CheckoutService {
         promotions.stream()
                 .sorted(promotionComparator)
                 .forEachOrdered(promotion -> {
-                    if (isPromotionApplicable(skuIdsWithPromotion, stockKeepingUnit, promotion)) {
+                    if (isSingleSkuPromotionApplicable(skuIdsWithPromotion, stockKeepingUnit, promotion)) {
                         skuIdsWithPromotion.add(stockKeepingUnit.getSkuId());
-                        cartItems.addAll(applyPromotion(stockKeepingUnit, promotion));
+                        cartItems.addAll(applySingleSkuPromotion(stockKeepingUnit, promotion));
+                    } else if (isMultiSkuPromotionApplicable
+                            (stockKeepingUnits, skuIdsWithPromotion, stockKeepingUnit, promotion)) {
+
+                        List<StockKeepingUnit> skusWithPromotion;
+                        skuIdsWithPromotion.addAll(getSkuIdsFromPromotion(promotion));
+                        skusWithPromotion = filterSkusByPromotion(stockKeepingUnits, promotion);
+                        cartItems.addAll(applyMultiSkuPromotion(skusWithPromotion, promotion));
                     }
                 });
         return cartItems;
     }
 
     /**
+     * @param stockKeepingUnits: List of {@link StockKeepingUnit} to be added in the shopping cart
      * @param skuIdsWithPromotion: List of {@link StockKeepingUnit}.skuId with promotion already applied.
-     * @param stockKeepingUnit: {@link StockKeepingUnit} to be evaluated for applying promotion
+     * @param stockKeepingUnit: {@link StockKeepingUnit} to be evaluated for applying Multi SKU promotion
      * @param promotion: {@link Promotion} to be checked if applicable to input stockKeepingUnit
      * @return True, If the promotion can be applied ,Else False.
      */
-    private boolean isPromotionApplicable(Collection<Character> skuIdsWithPromotion,
+    private boolean isMultiSkuPromotionApplicable(List<StockKeepingUnit> stockKeepingUnits,
+                                                  Collection<Character> skuIdsWithPromotion,
+                                                  StockKeepingUnit stockKeepingUnit, Promotion promotion) {
+        Character skuId = stockKeepingUnit.getSkuId();
+        if (skuIdsWithPromotion.contains(skuId))
+            return false;
+        else if (1 < promotion.getSkuTypes().length())
+            return (this.getSkuIdsFromStockKeepingUnits(stockKeepingUnits)
+                    .containsAll(this.getSkuIdsFromPromotion(promotion)))
+                    && (stockKeepingUnits.stream()
+                    .allMatch(sku -> sku.getQuantity() >= promotion.getLotSize()));
+        else
+            return false;
+    }
+
+    /**
+     * @param stockKeepingUnits: List of {@link com.example.model.StockKeepingUnit}
+     * @return List of {@link com.example.model.StockKeepingUnit#}.skuId
+     */
+    private List<Character> getSkuIdsFromStockKeepingUnits(Collection<StockKeepingUnit> stockKeepingUnits) {
+        return stockKeepingUnits.stream()
+                .map(StockKeepingUnit::getSkuId)
+                .map(Character::toUpperCase)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * @param promotion: {@link Promotion}
+     * @return List of {@link StockKeepingUnit#}.skuId for this Promotion
+     */
+    private List<Character> getSkuIdsFromPromotion(Promotion promotion) {
+        return promotion.getSkuTypes().chars()
+                .mapToObj(c -> (char) c)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * @param stockKeepingUnits: List of {@link com.example.model.StockKeepingUnit} to be filtered
+     * @param promotion: {@link Promotion} to be used to filter input List of {@link com.example.model.StockKeepingUnit}
+     * @return List of {@link com.example.model.StockKeepingUnit} whose skuId are part of the input promotion
+     */
+    private List<StockKeepingUnit> filterSkusByPromotion(List<StockKeepingUnit> stockKeepingUnits, Promotion promotion) {
+        return stockKeepingUnits.stream()
+                .filter(skuItem -> this.getSkuIdsFromPromotion(promotion).contains(skuItem.getSkuId()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * @param stockKeepingUnits: List of {@link StockKeepingUnit} on which {@link Promotion} is to be applied
+     * @param promotion: {@link Promotion} to be applied on input list of {@link StockKeepingUnit}
+     * @return List of {@link ShoppingCartItem}
+     */
+    private List<ShoppingCartItem> applyMultiSkuPromotion(List<StockKeepingUnit> stockKeepingUnits, Promotion promotion) {
+        List<ShoppingCartItem> cartItems;
+        int promotedQuantity;
+
+        promotedQuantity = getPromotedQuantity(promotion, stockKeepingUnits);
+        cartItems = new ArrayList<>();
+
+        for (Iterator<StockKeepingUnit> iterator = stockKeepingUnits.iterator(); iterator.hasNext(); ) {
+            StockKeepingUnit stockKeepingUnit;
+            BigDecimal promotedCartItemPrice;
+            BigDecimal nonPromotedCartItemPrice;
+            int cartQuantity;
+
+            stockKeepingUnit = iterator.next();
+
+            if (stockKeepingUnit.getQuantity() > promotedQuantity) {
+                nonPromotedCartItemPrice = BigDecimal.valueOf(stockKeepingUnit.getQuantity() - promotedQuantity)
+                        .multiply(getUnitPrice(stockKeepingUnit));
+
+                cartQuantity = stockKeepingUnit.getQuantity() - promotedQuantity;
+                cartItems.add(this.buildCartItem(stockKeepingUnit, nonPromotedCartItemPrice, null, cartQuantity));
+            }
+
+            if (iterator.hasNext()) {
+                promotedCartItemPrice = BigDecimal.ZERO;
+            } else {
+                promotedCartItemPrice = promotion.getValue()
+                        .multiply(BigDecimal.valueOf(promotedQuantity / promotion.getLotSize()));
+            }
+            cartItems.add(this.buildCartItem(stockKeepingUnit, promotedCartItemPrice, promotion.getName(), promotedQuantity));
+        }
+        return cartItems;
+    }
+
+    /**
+     * This method returns the quantity on which Multi SKU Promotion is applicable , based on minimum quantity among the
+     * skusWithPromotion based on promotion lotSize.
+     *
+     * @param promotion: Applied {@link Promotion}
+     * @param skusWithPromotion: List of {@link com.example.model.StockKeepingUnit} on which this promotion is applied.
+     * @return Quantity of Skus on which promotion value should be applied.
+     */
+    private int getPromotedQuantity(Promotion promotion, Collection<StockKeepingUnit> skusWithPromotion) {
+        int minQuantity = skusWithPromotion.stream()
+                .map(StockKeepingUnit::getQuantity)
+                .reduce(Integer::min)
+                .orElse(0);
+        return minQuantity - (minQuantity % promotion.getLotSize());
+    }
+
+    /**
+     * @param skuIdsWithPromotion: List of {@link StockKeepingUnit}.skuId with promotion already applied.
+     * @param stockKeepingUnit: {@link StockKeepingUnit} to be evaluated for applying Single Sku promotion
+     * @param promotion: {@link Promotion} to be checked if applicable to input stockKeepingUnit
+     * @return True, If the promotion can be applied ,Else False.
+     */
+    private boolean isSingleSkuPromotionApplicable(Collection<Character> skuIdsWithPromotion,
                                                    StockKeepingUnit stockKeepingUnit, Promotion promotion) {
         Character skuId = stockKeepingUnit.getSkuId();
         if (skuIdsWithPromotion.contains(skuId))
@@ -124,7 +241,7 @@ public class CheckoutServiceImpl implements CheckoutService {
      * @param promotion: {@link Promotion} to be applied on StockKeeping Unit
      * @return List of {@link ShoppingCartItem}
      */
-    private List<ShoppingCartItem> applyPromotion(StockKeepingUnit stockKeepingUnit, Promotion promotion) {
+    private List<ShoppingCartItem> applySingleSkuPromotion(StockKeepingUnit stockKeepingUnit, Promotion promotion) {
         List<ShoppingCartItem> cartItems;
         int promotedQuantity;
         int unPromotedQuantity;
