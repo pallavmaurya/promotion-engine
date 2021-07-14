@@ -150,4 +150,64 @@ public class CheckoutServiceImplTest {
 
         assertEquals(shoppingCart,checkoutService.checkout(stockKeepingUnitList));
     }
+
+    @Test
+    public void checkout_scenario3() {
+        StockKeepingUnit stockKeepingUnitA = StockKeepingUnit.builder().skuId('A').quantity(3).build();
+        StockKeepingUnit stockKeepingUnitB = StockKeepingUnit.builder().skuId('B').quantity(5).build();
+        StockKeepingUnit stockKeepingUnitC = StockKeepingUnit.builder().skuId('C').quantity(1).build();
+        StockKeepingUnit stockKeepingUnitD = StockKeepingUnit.builder().skuId('D').quantity(1).build();
+        stockKeepingUnitList.add(stockKeepingUnitA);
+        stockKeepingUnitList.add(stockKeepingUnitB);
+        stockKeepingUnitList.add(stockKeepingUnitC);
+        stockKeepingUnitList.add(stockKeepingUnitD);
+
+        ShoppingCartItem shoppingCartItemA = ShoppingCartItem.builder()
+                .stockKeepingUnit(stockKeepingUnitA)
+                .cartItemPrice(BigDecimal.valueOf(130))
+                .promotionName("3 of As for 130")
+                .build();
+
+        StockKeepingUnit stockKeepingUnitBWithPromotion = StockKeepingUnit.builder().skuId('B').quantity(4).build();
+        ShoppingCartItem shoppingCartItemBWithPromotion = ShoppingCartItem.builder()
+                .stockKeepingUnit(stockKeepingUnitBWithPromotion)
+                .cartItemPrice(BigDecimal.valueOf(90))
+                .promotionName("2 of Bs for 45")
+                .build();
+
+        StockKeepingUnit stockKeepingUnitBWithoutPromotion = StockKeepingUnit.builder().skuId('B').quantity(1).build();
+        ShoppingCartItem shoppingCartItemBWithoutPromotion = ShoppingCartItem.builder()
+                .stockKeepingUnit(stockKeepingUnitBWithoutPromotion)
+                .cartItemPrice(BigDecimal.valueOf(30))
+                .promotionName(null)
+                .build();
+
+        ShoppingCartItem shoppingCartItemC = ShoppingCartItem.builder()
+                .stockKeepingUnit(stockKeepingUnitC)
+                .cartItemPrice(BigDecimal.valueOf(0))
+                .promotionName("C & D for 30")
+                .build();
+
+        ShoppingCartItem shoppingCartItemD = ShoppingCartItem.builder()
+                .stockKeepingUnit(stockKeepingUnitD)
+                .cartItemPrice(BigDecimal.valueOf(30))
+                .promotionName("C & D for 30")
+                .build();
+
+        List<ShoppingCartItem> shoppingCartItems = new ArrayList<>();
+        shoppingCartItems.add(shoppingCartItemA);
+        shoppingCartItems.add(shoppingCartItemBWithPromotion);
+        shoppingCartItems.add(shoppingCartItemBWithoutPromotion);
+        shoppingCartItems.add(shoppingCartItemC);
+        shoppingCartItems.add(shoppingCartItemD);
+
+        shoppingCart = ShoppingCart.builder()
+                .shoppingCartItems(shoppingCartItems)
+                .discount(BigDecimal.valueOf(55))
+                .priceBeforeDiscount(BigDecimal.valueOf(335))
+                .totalPrice(BigDecimal.valueOf(280))
+                .build();
+
+        assertEquals(shoppingCart,checkoutService.checkout(stockKeepingUnitList));
+    }
 }
