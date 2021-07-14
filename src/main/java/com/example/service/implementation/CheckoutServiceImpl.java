@@ -31,6 +31,7 @@ public class CheckoutServiceImpl implements CheckoutService {
 
 
     private final PriceService priceService;
+    private final PromotionService promotionService;
 
     /**
      * @param stockKeepingUnits : List of {@link StockKeepingUnit} to be added in the shopping cart
@@ -45,16 +46,20 @@ public class CheckoutServiceImpl implements CheckoutService {
         List<ShoppingCartItem> cartItems;
         AtomicReference<BigDecimal> cartItemPrice = new AtomicReference<>();
 
-        cartItems = new ArrayList<>();
+        cartItems = stockKeepingUnits.stream()
+                .map(stockKeepingUnit -> applyPromotions(stockKeepingUnits, skuIdsWithPromotion, stockKeepingUnit))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
 
         stockKeepingUnits.stream()
                 .filter(stockKeepingUnit -> !skuIdsWithPromotion.contains(stockKeepingUnit.getSkuId()))
                 .forEach(stockKeepingUnit -> {
-                    cartItemPrice.set(this.calculateSkuPrice(stockKeepingUnit));
-                    cartItems.add(this.buildCartItem(stockKeepingUnit, cartItemPrice.get(), stockKeepingUnit.getQuantity()));
+                    cartItemPrice.set(calculateSkuPrice(stockKeepingUnit));
+                    cartItems.add(buildCartItem(stockKeepingUnit, cartItemPrice.get(),
+                            null,stockKeepingUnit.getQuantity()));
                 });
 
-        priceBeforeDiscount = this.getTotalPriceBeforeDiscount(stockKeepingUnits);
+        priceBeforeDiscount = getTotalPriceBeforeDiscount(stockKeepingUnits);
         totalPrice = cartItems.stream()
                 .map(ShoppingCartItem::getCartItemPrice)
                 .reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
@@ -64,6 +69,89 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .discount(priceBeforeDiscount.subtract(totalPrice))
                 .totalPrice(totalPrice)
                 .build();
+    }
+
+
+    /**
+     * @param stockKeepingUnits: List of {@link com.example.model.StockKeepingUnits} to be added in the shopping cart.
+     * @param skuIdsWithPromotion: List of {@link StockKeepingUnit}.skuId with promotion already applied.
+     * @param stockKeepingUnit: {@link StockKeepingUnit} on which promotion is to be applied.
+     * @return List of {@link ShoppingCartItem}
+     */
+    private List<ShoppingCartItem> applyPromotions(List<StockKeepingUnit> stockKeepingUnits,
+                                                   List<Character> skuIdsWithPromotion,
+                                                   StockKeepingUnit stockKeepingUnit) {
+        List<ShoppingCartItem> cartItems;
+        Comparator<Promotion> promotionComparator;
+        List<Promotion> promotions ;
+
+        cartItems = new ArrayList<>();
+        promotionComparator = Comparator.comparingInt(Promotion::getPriority);
+
+        promotions = getValidPromotions();
+
+        promotions.stream()
+                .sorted(promotionComparator)
+                .forEachOrdered(promotion -> {
+                    if (isPromotionApplicable(skuIdsWithPromotion, stockKeepingUnit, promotion)) {
+                        skuIdsWithPromotion.add(stockKeepingUnit.getSkuId());
+                        cartItems.addAll(applyPromotion(stockKeepingUnit, promotion));
+                    }
+                });
+        return cartItems;
+    }
+
+    /**
+     * @param skuIdsWithPromotion: List of {@link StockKeepingUnit}.skuId with promotion already applied.
+     * @param stockKeepingUnit: {@link StockKeepingUnit} to be evaluated for applying promotion
+     * @param promotion: {@link Promotion} to be checked if applicable to input stockKeepingUnit
+     * @return True, If the promotion can be applied ,Else False.
+     */
+    private boolean isPromotionApplicable(Collection<Character> skuIdsWithPromotion,
+                                                   StockKeepingUnit stockKeepingUnit, Promotion promotion) {
+        Character skuId = stockKeepingUnit.getSkuId();
+        if (skuIdsWithPromotion.contains(skuId))
+            return false;
+        else if (1 == promotion.getSkuTypes().length())
+            return (0 == skuId.compareTo(Character.toUpperCase(promotion.getSkuTypes().toCharArray()[0])))
+                    && (stockKeepingUnit.getQuantity() >= promotion.getLotSize());
+        else
+            return false;
+    }
+
+    /**
+     * @param stockKeepingUnit: {@link StockKeepingUnit} on which promotion is to be applied
+     * @param promotion: {@link Promotion} to be applied on StockKeeping Unit
+     * @return List of {@link ShoppingCartItem}
+     */
+    private List<ShoppingCartItem> applyPromotion(StockKeepingUnit stockKeepingUnit, Promotion promotion) {
+        List<ShoppingCartItem> cartItems;
+        int promotedQuantity;
+        int unPromotedQuantity;
+        BigDecimal promotedCartItemPrice;
+        BigDecimal unPromotedCartItemPrice;
+
+        promotedQuantity = (stockKeepingUnit.getQuantity() / promotion.getLotSize()) * promotion.getLotSize();
+        unPromotedQuantity = (stockKeepingUnit.getQuantity() % promotion.getLotSize());
+        promotedCartItemPrice = BigDecimal.valueOf(stockKeepingUnit.getQuantity() / promotion.getLotSize())
+                .multiply(promotion.getValue());
+
+        cartItems = new ArrayList<>();
+        cartItems.add(buildCartItem(stockKeepingUnit, promotedCartItemPrice, promotion.getName(), promotedQuantity));
+
+        if (0 < unPromotedQuantity) {
+            unPromotedCartItemPrice = BigDecimal.valueOf(unPromotedQuantity).multiply(getUnitPrice(stockKeepingUnit));
+            cartItems.add(buildCartItem(stockKeepingUnit, unPromotedCartItemPrice, null, unPromotedQuantity));
+        }
+        return cartItems;
+    }
+
+    /**
+     * @return List of Active Promotions with a non zero lotSize (to prevent divide by zero Exception)
+     */
+    private List<Promotion> getValidPromotions() {
+        return promotionService.getActivePromotions().stream()
+                .filter(promotion -> promotion.getLotSize() > 0).collect(Collectors.toList());
     }
 
     /**
@@ -82,7 +170,7 @@ public class CheckoutServiceImpl implements CheckoutService {
      */
     private BigDecimal getUnitPrice(StockKeepingUnit stockKeepingUnit) {
         Character skuId = stockKeepingUnit.getSkuId();
-        SkuPrice skuPrice = this.priceService.getSkuPrice(skuId);
+        SkuPrice skuPrice = priceService.getSkuPrice(skuId);
         return skuPrice.getUnitPrice();
     }
 
@@ -105,10 +193,11 @@ public class CheckoutServiceImpl implements CheckoutService {
      * @return cart item {@link ShoppingCartItem}
      */
     private ShoppingCartItem buildCartItem(StockKeepingUnit stockKeepingUnit, BigDecimal cartItemPrice,
-                                           int quantity) {
+                                           String promotionName, int quantity) {
         return ShoppingCartItem.builder()
                 .stockKeepingUnit(getStockKeepingUnit(stockKeepingUnit, quantity))
                 .cartItemPrice(cartItemPrice)
+                .promotionName(promotionName)
                 .build();
     }
 

@@ -25,6 +25,9 @@ public class CheckoutServiceImplTest {
     @Mock
     private PriceServiceImpl priceService;
 
+    @Mock
+    private PromotionServiceImpl promotionService;
+
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
 
@@ -42,6 +45,9 @@ public class CheckoutServiceImplTest {
                 .thenReturn(SkuPrice.builder().skuId('B').unitPrice(BigDecimal.valueOf(30)).build());
         when(priceService.getSkuPrice('C'))
                 .thenReturn(SkuPrice.builder().skuId('C').unitPrice(BigDecimal.valueOf(20)).build());
+
+        when(promotionService.getActivePromotions())
+                .thenReturn(TestDataSetup.getActivePromotions());
     }
 
     @Test
