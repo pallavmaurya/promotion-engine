@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.model.ShoppingCart;
 import com.example.model.StockKeepingUnits;
 import com.example.service.CheckoutService;
+import com.example.validation.UniqueSkuConstraint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 @Validated
 @RestController
@@ -21,7 +24,7 @@ public class CheckoutController {
 
 
     @RequestMapping(produces = "application/json", method = RequestMethod.POST)
-    public ResponseEntity<ShoppingCart> checkout( @RequestBody StockKeepingUnits stockKeepingUnits) {
+    public ResponseEntity<ShoppingCart> checkout(@UniqueSkuConstraint @Valid @RequestBody StockKeepingUnits stockKeepingUnits) {
         return ResponseEntity.ok(this.checkoutService.checkout(stockKeepingUnits.getStockKeepingUnits()));
     }
 }
