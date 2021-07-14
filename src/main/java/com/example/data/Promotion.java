@@ -4,6 +4,7 @@ import com.example.model.DiscountEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Builder
+@Getter
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor

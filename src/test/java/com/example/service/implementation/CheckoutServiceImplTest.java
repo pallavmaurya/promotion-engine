@@ -1,5 +1,7 @@
 package com.example.service.implementation;
 
+import com.example.TestDataSetup;
+import com.example.data.SkuPrice;
 import com.example.model.ShoppingCart;
 import com.example.model.ShoppingCartItem;
 import com.example.model.StockKeepingUnit;
@@ -7,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigDecimal;
@@ -14,9 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CheckoutServiceImplTest {
+
+    @Mock
+    private PriceServiceImpl priceService;
 
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
@@ -28,10 +35,17 @@ public class CheckoutServiceImplTest {
     @Before
     public void setUp() {
         stockKeepingUnitList = new ArrayList<>();
+
+        when(priceService.getSkuPrice('A'))
+                .thenReturn(SkuPrice.builder().skuId('A').unitPrice(BigDecimal.valueOf(50)).build());
+        when(priceService.getSkuPrice('B'))
+                .thenReturn(SkuPrice.builder().skuId('B').unitPrice(BigDecimal.valueOf(30)).build());
+        when(priceService.getSkuPrice('C'))
+                .thenReturn(SkuPrice.builder().skuId('C').unitPrice(BigDecimal.valueOf(20)).build());
     }
 
     @Test
-    public void checkout() {
+    public void checkoutScenario1() {
 
         StockKeepingUnit stockKeepingUnitA = StockKeepingUnit.builder().skuId('A').quantity(1).build();
         StockKeepingUnit stockKeepingUnitB = StockKeepingUnit.builder().skuId('B').quantity(1).build();

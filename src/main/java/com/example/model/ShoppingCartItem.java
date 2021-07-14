@@ -2,6 +2,7 @@ package com.example.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @AllArgsConstructor
+@EqualsAndHashCode
 public class ShoppingCartItem {
 
     private final StockKeepingUnit stockKeepingUnit;
