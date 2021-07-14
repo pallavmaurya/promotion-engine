@@ -13,6 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class StockKeepingUnits {
 
-    private final List<StockKeepingUnit>  stockKeepingUnits;
+    private final List<StockKeepingUnit> stockKeepingUnits;
 
 }

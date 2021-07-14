@@ -1,11 +1,26 @@
 package com.example.service.implementation;
 
 import com.example.data.Promotion;
+import com.example.repository.PromotionRepository;
+import com.example.service.PriceService;
 import com.example.service.PromotionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-public class PromotionServiceImpl  implements PromotionService {
+
+/**
+ * This class implements methods exposed by {@link PriceService}
+ *
+ * @author pallavmaurya@gmail.com
+ */
+@Service
+@RequiredArgsConstructor
+public class PromotionServiceImpl implements PromotionService {
+
+    private final PromotionRepository promotionRepository;
+
     /**
      * Fetch list of all active {@link Promotion} from {@link PromotionRepository}.
      *
@@ -13,6 +28,6 @@ public class PromotionServiceImpl  implements PromotionService {
      */
     @Override
     public List<Promotion> getActivePromotions() {
-        return null;
+        return this.promotionRepository.findAllByActiveIsTrue();
     }
 }

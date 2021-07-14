@@ -2,10 +2,12 @@ package com.example.service.implementation;
 
 import com.example.data.Promotion;
 import com.example.model.DiscountEnum;
+import com.example.repository.PromotionRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigDecimal;
@@ -17,6 +19,9 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PromotionServiceImplTest {
+
+    @Mock
+    private PromotionRepository promotionRepository;
 
     @InjectMocks
     private PromotionServiceImpl promotionService;
@@ -62,6 +67,7 @@ public class PromotionServiceImplTest {
                     .active(true)
                     .build();
             promotions.add(oneCDPromotion);
+        when(promotionRepository.findAllByActiveIsTrue()).thenReturn(promotions);
 
     }
 
