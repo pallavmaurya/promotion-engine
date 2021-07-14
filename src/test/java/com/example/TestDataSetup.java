@@ -2,6 +2,10 @@ package com.example;
 
 import com.example.data.Promotion;
 import com.example.model.DiscountEnum;
+import com.example.model.ShoppingCart;
+import com.example.model.ShoppingCartItem;
+import com.example.model.StockKeepingUnit;
+import com.example.model.StockKeepingUnits;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -48,5 +52,60 @@ public class TestDataSetup {
                 .build();
         promotions.add(oneCDPromotion);
         return promotions;
+    }
+
+    public static StockKeepingUnits getStockKeepingUnits() {
+        List<StockKeepingUnit> stockKeepingUnitList = getStockKeepingUnitsList();
+        StockKeepingUnits stockKeepingUnits;
+        stockKeepingUnits = new StockKeepingUnits();
+        stockKeepingUnits.setStockKeepingUnits(stockKeepingUnitList);
+        return stockKeepingUnits;
+    }
+
+    public static List<StockKeepingUnit> getStockKeepingUnitsList() {
+        List<StockKeepingUnit> stockKeepingUnitList;
+        stockKeepingUnitList = new ArrayList<>();
+        stockKeepingUnitList.add( getStockKeepingUnit());
+        return stockKeepingUnitList;
+    }
+
+    public static StockKeepingUnit getStockKeepingUnit() {
+        StockKeepingUnit stockKeepingUnit;
+        stockKeepingUnit = StockKeepingUnit.builder()
+                .skuId('A')
+                .quantity(1)
+                .build();
+        return stockKeepingUnit;
+    }
+
+    public static List<ShoppingCartItem> getShoppingCartItems() {
+        ShoppingCartItem shoppingCartItem = getShoppingCartItem();
+        List<ShoppingCartItem> shoppingCartItems;
+        shoppingCartItems = new ArrayList<>();
+        shoppingCartItems.add(shoppingCartItem);
+        return shoppingCartItems;
+    }
+
+    public static ShoppingCartItem getShoppingCartItem() {
+        StockKeepingUnit stockKeepingUnit = getStockKeepingUnit();
+        ShoppingCartItem shoppingCartItem;
+        shoppingCartItem = ShoppingCartItem.builder()
+                .stockKeepingUnit(stockKeepingUnit)
+                .cartItemPrice(BigDecimal.TEN)
+                .promotionName(null)
+                .build();
+        return shoppingCartItem;
+    }
+
+    public static ShoppingCart getShoppingCart() {
+        List<ShoppingCartItem> shoppingCartItems = getShoppingCartItems();
+        ShoppingCart shoppingCart;
+        shoppingCart = ShoppingCart.builder()
+                .shoppingCartItems(shoppingCartItems)
+                .discount(BigDecimal.ZERO)
+                .totalPrice(BigDecimal.TEN)
+                .priceBeforeDiscount(BigDecimal.TEN)
+                .build();
+        return shoppingCart;
     }
 }
