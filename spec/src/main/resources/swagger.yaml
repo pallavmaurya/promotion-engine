@@ -1,0 +1,94 @@
+openapi: 3.0.1
+info:
+  title: Promotion Engine
+  description: 'This is a simple Rest API developed using Spring boot framework to implement promotion engine for shopping cart checkout
+process.'
+  contact:
+    email: pallavmaurya@gmail.com
+  version: 1.0.0
+tags:
+  - name: promotionengine
+    description: Cart operations
+paths:
+  /promotionengine/v1/checkout:
+    post:
+      tags:
+        - promotionengine
+      summary: Checkout list of StockKeepingUnits to get a ShoppingCartItems response
+      operationId: checkout
+      requestBody:
+        description: StockKeepingUnits
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockKeepingUnits'
+        required: true
+      responses:
+        200:
+          description: successful checkout
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShoppingCart'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: string
+components:
+  schemas:
+    StockKeepingUnit:
+      type: object
+      properties:
+        skuId:
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: "A"
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+    StockKeepingUnits:
+      type: object
+      properties:
+        stockKeepingUnits:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockKeepingUnit'
+    ShoppingCartItem:
+      type: object
+      properties:
+        stockKeepingUnit:
+          $ref: '#/components/schemas/StockKeepingUnit'
+        cartItemPrice:
+          type: number
+          format: double
+        promotionName:
+          type: string
+          example: "3 of As for 130"
+    ShoppingCart:
+      type: object
+      properties:
+        shoppingCartItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingCartItem'
+        priceBeforeDiscount:
+          type: number
+          format: double
+        discount:
+          type: number
+          format: double
+        totalPrice:
+          type: number
+          format: double
+    DiscountEnum:
+      type: string
+      enum:
+        - FIXED_PRICE
+        - PERCENTAGE
+        - DEDUCTION

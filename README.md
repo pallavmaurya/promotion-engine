@@ -39,10 +39,12 @@ Active Promotions
 * Clone this repository
 * Make sure you are using JDK 1.8 and Maven 3.x
 * You can build the project and run the tests by running ```mvn clean package```
-* Once successfully built, you can run the service by below command
+* Once successfully built, you can run the service by below command in service folder
+
 ```
         mvn spring-boot:run
 ```
+
 * Check the stdout or boot_example.log file to make sure no exceptions are thrown
 
 Once the application runs you should see something like this
@@ -52,6 +54,7 @@ Once the application runs you should see something like this
 2021-07-14 16:00:27.615  INFO 15840 --- [           main] c.e.p.PromotionEngineApplication         : Started PromotionEngineApplication in 7.938 seconds (JVM running for 8.826)
 ```
 
+API documentation in exposed at http://localhost:8080/swagger-ui.html
 
 ## About the Service
 
@@ -59,7 +62,7 @@ The service is just a simple shopping cart checkout REST service. It uses an in-
 You can call the /promotionengine/v1/checkout endpoint with the StockKeepingUnits and corresponding quantity as payload
 The API response object is a Shopping Cart Object with content type as application/json
 
-The promotion engine logic works on the Unit prices and Promotion objects stored  in H2 database
+The promotion engine logic works on the Unit prices and Promotion objects stored in H2 database
 
 Promotion object has following attributes:
 
@@ -73,16 +76,16 @@ with highest priority among those will be applied.
 
 lotSize  : the number of items that should be present in cart for the (SKU)s, so that this promotion is applicable
 
-discountType : FIXED_PRICE,PERCENTAGE,DEDUCTION   as of now only FIXED price had been implemented,
-rest can be implemented using same oBject structure, bu changing the calculation logic in CheckoutServiceImpl
+discountType : FIXED_PRICE,PERCENTAGE,DEDUCTION as of now only FIXED price had been implemented, rest can be implemented
+using same oBject structure, bu changing the calculation logic in CheckoutServiceImpl
 
-value   : discount value -> absolute value for FIXED_PRICE, percentage value for PERCENTAGE, absolute value for DEDUCTION
+value   : discount value -> absolute value for FIXED_PRICE, percentage value for PERCENTAGE, absolute value for
+DEDUCTION
 
 active  : whether the promotion is active
 
-
-
 ### Database scripts for the data model and test data
+
 ```
 DROP TABLE IF EXISTS SkuPrice;
 
@@ -118,6 +121,7 @@ VALUES ('A', '3 of As for 130', 1, 3, 'FIXED_PRICE', 130, TRUE),
 ```
 
 ### Sample Payload
+
 ```
 {
     "stockKeepingUnits": [
@@ -142,6 +146,7 @@ VALUES ('A', '3 of As for 130', 1, 3, 'FIXED_PRICE', 130, TRUE),
 ```
 
 ### Sample Response
+
 ```
 {
     "shoppingCartItems": [
@@ -226,5 +231,6 @@ curl -L -X POST 'http://localhost:8080/promotionengine/v1/checkout' \
     ]
 }'
 ```
+
 # Questions and Comments: pallavmaurya@gmail.com
 
